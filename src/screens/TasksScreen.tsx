@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, StyleSheet, ListRenderItemInfo } from "react-native";
 import { ActivityIndicator, FAB } from "react-native-paper";
 import { FlatList } from "react-native-gesture-handler";
@@ -10,9 +10,14 @@ import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 const TasksScreen: React.FC<{
   navigation: TasksScreenNavigationProp;
 }> = ({ navigation }) => {
-  const { tasks, deleteTask, toggleComplete, isLoading } = useTasksContext();
+  const { tasks, fetchTasks, deleteTask, toggleComplete, isLoading } =
+    useTasksContext();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
   const showDeleteConfirmationModal = (taskId: string) => {
     setSelectedTaskId(taskId);

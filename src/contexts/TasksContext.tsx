@@ -135,10 +135,6 @@ export const TasksProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  useEffect((): void => {
-    fetchTasks();
-  }, []);
-
   const value: TasksContextType = {
     tasks,
     isLoading,
