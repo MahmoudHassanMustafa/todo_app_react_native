@@ -94,7 +94,7 @@ const AddTaskScreen: React.FC<{
           title: resData.title,
           description: resData.description,
           isComplete: resData.isComplete,
-          dueDate: resData.dueDate ? formatDate(resData.dueDate) : undefined,
+          dueDate: resData.dueDate,
         };
 
         addTask(newTask);
