@@ -17,6 +17,7 @@ import { format, parseISO } from "date-fns";
 import { AddTaskScreenNavigationProp } from "../navigation/NavigationTypes";
 import { Keyboard } from "react-native";
 import { SERVER_URL } from "../../config";
+import { formatDate } from "../utils/format-date";
 
 type AndroidMode = "date" | "time";
 
@@ -28,6 +29,7 @@ const AddTaskScreen: React.FC<{
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const { addTask } = useTasksContext();
   const [isLoading, setIsLoading] = useState(false);
+  const [errorResponse, setErrorResponse] = useState<string>();
 
   const onChange = (event: any, selectedDate: Date | undefined) => {
     const currentDate = selectedDate;
@@ -53,12 +55,6 @@ const AddTaskScreen: React.FC<{
 
   let newTask: Task;
 
-  const formatDate = (dateString: string): string => {
-    const date = parseISO(dateString);
-    const formattedDate = format(date, "EEE dd LLL yy hh:mm a");
-    return formattedDate;
-  };
-
   const handleAddTask = async (): Promise<void> => {
     Keyboard.dismiss();
     if (!title.trim()) {
@@ -66,9 +62,15 @@ const AddTaskScreen: React.FC<{
       alert("Please enter a title for the task.");
       return;
     }
+
+    if (dueDate && new Date(dueDate) < new Date()) {
+      alert("Due date cannot be in the past.");
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const apiUrl: string = `${SERVER_URL}/task/new`;
+      const apiUrl: string = `${SERVER_URL}/tasks/`;
 
       const accessToken = await AsyncStorage.getItem("accessToken");
       const response = await axios.post(
@@ -82,25 +84,30 @@ const AddTaskScreen: React.FC<{
         }
       );
 
-      const resData = response.data;
-      console.log(response.data.dueDate);
+      console.log(response.status);
 
-      newTask = {
-        id: resData.id,
-        title: resData.title,
-        description: resData.description,
-        isComplete: resData.isComplete,
-        dueDate: resData.dueDate ? formatDate(resData.dueDate) : undefined,
-      };
+      if (response.status == 201) {
+        const resData = response.data;
 
-      addTask(newTask);
+        newTask = {
+          id: resData.id,
+          title: resData.title,
+          description: resData.description,
+          isComplete: resData.isComplete,
+          dueDate: resData.dueDate ? formatDate(resData.dueDate) : undefined,
+        };
+
+        addTask(newTask);
+        navigation.goBack();
+      }
     } catch (error) {
-      console.error(error);
+      const errMessage: string =
+        (error as any).response.data.error ??
+        Object.values((error as any).response.data.errors);
+      setErrorResponse(`${errMessage}`);
     } finally {
       setIsLoading(false);
     }
-
-    navigation.goBack();
   };
 
   return (
@@ -136,7 +143,7 @@ const AddTaskScreen: React.FC<{
             onPress={showDatepicker}
           />
           <Text style={styles.placeholder}>
-            {dueDate ? dueDate.toLocaleString() : "Select Date & Time"}
+            {dueDate ? formatDate(dueDate.toISOString()) : "Select Date & Time"}
           </Text>
           <IconButton
             icon="clock"
@@ -147,6 +154,8 @@ const AddTaskScreen: React.FC<{
         </View>
       </SafeAreaView>
       <Button title="Add Task" onPress={handleAddTask} />
+      <Text style={styles.errorRes}>{errorResponse}</Text>
+
       {isLoading && <LoadingOverlay />}
     </View>
   );
@@ -189,6 +198,13 @@ const styles = StyleSheet.create({
     padding: 8,
     marginBottom: 16,
     textAlignVertical: "top",
+  },
+  errorRes: {
+    textAlign: "center",
+    marginTop: 20,
+    color: "red",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
 

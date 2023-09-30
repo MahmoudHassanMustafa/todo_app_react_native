@@ -60,17 +60,20 @@ const LoginScreen: React.FC<{ navigation: LoginScreenNavigationProp }> = ({
 
       console.log("Logged in successful:", response.data);
 
-      if (response.status == 201) {
+      if (response.status == 200) {
         setErrorResponse(undefined);
 
         // saving the access token
-        const accessToken = response.data.accessToken;
+        const accessToken = response.data.token;
         await AsyncStorage.setItem("accessToken", accessToken);
 
         navigation.navigate("Tasks");
       }
     } catch (error) {
-      setErrorResponse(`${(error as any).response.data.message}`);
+      const errMessage: string =
+        (error as any).response.data.error ??
+        Object.values((error as any).response.data.errors);
+      setErrorResponse(`${errMessage}`);
     } finally {
       setIsLoading(false);
     }

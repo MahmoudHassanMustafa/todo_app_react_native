@@ -46,13 +46,17 @@ const RegisterScreen: React.FC<{
       );
 
       console.log("Registration successful:", response.data);
+      console.log(response.status);
 
       if (response.status == 201) {
         setErrorResponse(undefined);
         navigation.navigate("Login");
       }
     } catch (error) {
-      setErrorResponse(`${(error as any).response.data.message}`);
+      const errMessage: string =
+        (error as any).response.data.error ??
+        Object.values((error as any).response.data.errors);
+      setErrorResponse(`${errMessage}`);
     } finally {
       setIsLoading(false);
     }

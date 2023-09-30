@@ -2,6 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Checkbox, IconButton } from "react-native-paper"; // Assuming you're using react-native-paper
+import { formatDate } from "../utils/format-date";
 
 const TaskListItem = ({ task, onCheck, onDelete }) => {
   return (
@@ -15,17 +16,32 @@ const TaskListItem = ({ task, onCheck, onDelete }) => {
       <View style={styles.textContainer}>
         <View style={styles.taskTitleBox}>
           <MaterialIcons name="title" size={20} />
-          <Text style={[styles.title, task.isComplete && styles.crossedOutText]}>{task.title}</Text>
+          <Text
+            style={[styles.title, task.isComplete && styles.crossedOutText]}
+          >
+            {task.title}
+          </Text>
         </View>
         {task.description && (
           <View style={styles.descriptionBox}>
-            <Text style={[styles.description, task.isComplete && styles.crossedOutText]}>{task.description}</Text>
+            <Text
+              style={[
+                styles.description,
+                task.isComplete && styles.crossedOutText,
+              ]}
+            >
+              {task.description}
+            </Text>
           </View>
         )}
         {task.dueDate && (
           <View style={styles.taskDueDateBox}>
             <MaterialIcons name="timer" size={20} />
-            <Text style={[styles.dueDate, task.isComplete && styles.crossedOutText ]}>{task.dueDate}</Text>
+            <Text
+              style={[styles.dueDate, task.isComplete && styles.crossedOutText]}
+            >
+              {formatDate(task.dueDate)}
+            </Text>
           </View>
         )}
       </View>

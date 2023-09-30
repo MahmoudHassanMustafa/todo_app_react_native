@@ -1,12 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import React, {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useEffect,
-} from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 import { SERVER_URL } from "../../config";
 
 export interface Task {
@@ -22,14 +16,13 @@ interface TasksContextType {
   isLoading: boolean;
   addTask: (task: Task) => void;
   fetchTasks: () => void;
-  updateTask: (taskId: string, updatedTask: Task) => void;
   deleteTask: (taskId: string) => void;
   toggleComplete: (taskId: string) => void;
 }
 
 const TasksContext = createContext<TasksContextType | undefined>(undefined);
 
-export const useTasksContext = () => {
+export const useTasksContext = (): TasksContextType => {
   const context = useContext(TasksContext);
   if (!context) {
     throw new Error("useTasksContext must be used within a TasksProvider");
@@ -55,7 +48,7 @@ export const TasksProvider: React.FC<{ children: ReactNode }> = ({
     try {
       setIsLoading(true);
 
-      const apiUrl: string = `${SERVER_URL}/task/feed`;
+      const apiUrl: string = `${SERVER_URL}/tasks`;
 
       const accessToken = await AsyncStorage.getItem("accessToken");
       const response = await axios.get(apiUrl, {
@@ -72,27 +65,20 @@ export const TasksProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const updateTask = (taskId: string, updatedTask: Task): void => {
-    setTasks((prevTasks: Task[]): Task[] => {
-      return prevTasks.map(
-        (task: Task): Task =>
-          task.id === taskId ? { ...task, ...updatedTask } : task
-      );
-    });
-  };
-
   const deleteTask = async (taskId: string): Promise<void> => {
-    const taskToDelete = tasks.find((task) => task.id === taskId);
+    const taskToDelete = tasks.find(
+      (task: Task): boolean => task.id === taskId
+    );
     if (!taskToDelete) {
       return;
     }
 
     setTasks((prevTasks: Task[]): Task[] =>
-      prevTasks.filter((task) => task.id !== taskId)
+      prevTasks.filter((task: Task): boolean => task.id !== taskId)
     );
 
     try {
-      const apiUrl: string = `${SERVER_URL}/task/${taskId}`;
+      const apiUrl: string = `${SERVER_URL}/tasks/${taskId}`;
 
       const accessToken = await AsyncStorage.getItem("accessToken");
       await axios.delete(apiUrl, {
@@ -108,17 +94,20 @@ export const TasksProvider: React.FC<{ children: ReactNode }> = ({
   const toggleComplete = async (taskId: string): Promise<void> => {
     try {
       const accessToken = await AsyncStorage.getItem("accessToken");
-      const taskToToggle = tasks.find((task) => task.id === taskId);
+      const taskToToggle = tasks.find(
+        (task: Task): boolean => task.id === taskId
+      );
       if (!taskToToggle) {
         return;
       }
 
-      const updatedTasks = tasks.map((task: Task) =>
-        task.id === taskId ? { ...task, isComplete: !task.isComplete } : task
+      const updatedTasks = tasks.map(
+        (task: Task): Task =>
+          task.id === taskId ? { ...task, isComplete: !task.isComplete } : task
       );
       setTasks(updatedTasks);
 
-      const apiUrl: string = `${SERVER_URL}/task/${taskId}`;
+      const apiUrl: string = `${SERVER_URL}/tasks/${taskId}`;
 
       await axios.patch(
         apiUrl,
@@ -140,7 +129,6 @@ export const TasksProvider: React.FC<{ children: ReactNode }> = ({
     isLoading,
     addTask,
     fetchTasks,
-    updateTask,
     deleteTask,
     toggleComplete,
   };
